@@ -1,8 +1,8 @@
 package DatabaseCore;
 
 import Utilities.ByteSequence;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,8 +10,11 @@ import static Utilities.ByteSequence.extendByteArray;
 
 public class RecordStorage {
 
-    private enum BLOCK_HEADERS {
-        NEXT_BLOCK_ID, PREV_BLOCK_ID, CONTENT_LENGTH, IS_DISPOSED
+    private static class BLOCK_HEADERS{
+        static int NEXT_BLOCK_ID  = 0;
+        static int PREV_BLOCK_ID  = 1;
+        static int CONTENT_LENGTH = 2;
+        static int IS_DISPOSED    = 3;
     }
 
     private BlockStorage blockStorage;
@@ -28,22 +31,26 @@ public class RecordStorage {
         if(block == null)
             return null;
 
+        if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
+            return null;
+        }
+
         int offSet = 0;
         int nextBlockId;
-        int blockSize = block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH.ordinal());
+        int blockSize = block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH);
 
         byte bytes[] = new byte[blockSize];
 
         while(true){
             block.read(bytes, offSet, blockStorage.blockHeaderSize, blockSize);
-            nextBlockId = block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID.ordinal());
+            nextBlockId = block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID);
 
             if(nextBlockId == -1) return bytes;
 
             offSet += blockSize;
 
             block = blockStorage.findBlock(nextBlockId);
-            blockSize = block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH.ordinal());
+            blockSize = block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH);
             bytes = extendByteArray(bytes, blockSize);
         }
     }
@@ -62,48 +69,116 @@ public class RecordStorage {
 
             current.write(bytes, written, blockStorage.blockHeaderSize, toWriteInCurrent);
 
-            current.setHeader(BLOCK_HEADERS.PREV_BLOCK_ID.ordinal(), (prev == null) ? -1 : prev.getId());
-            current.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID.ordinal(), -1);
-            current.setHeader(BLOCK_HEADERS.CONTENT_LENGTH.ordinal(), toWriteInCurrent);
-            current.setHeader(BLOCK_HEADERS.IS_DISPOSED.ordinal(), 0);
+            current.setHeader(BLOCK_HEADERS.PREV_BLOCK_ID, (prev == null) ? -1 : prev.getId());
+            current.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID, -1);
+            current.setHeader(BLOCK_HEADERS.CONTENT_LENGTH, toWriteInCurrent);
+            current.setHeader(BLOCK_HEADERS.IS_DISPOSED, 0);
 
             written += toWriteInCurrent;
 
             if(toWrite > written){
                 prev = current;
                 current = createBlock();
-                prev.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID.ordinal(), current.getId());
+                prev.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID, current.getId());
             }
             else
                 break;
         }
+    }
 
-        Block block;
-        byte bytes1[] = new byte[blockStorage.blockContentSize];
+    public void disposeRecord(int recordId){
+        List<Block> blocks = findBlocksInRecord(recordId);
 
-        for(int i = 0; i < blockStorage.getNumBlocks(); i++){
-            block = blockStorage.findBlock(i);
-            System.out.println("Block " + i + ": " + block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID.ordinal()) + ", " + block.getHeader(BLOCK_HEADERS.PREV_BLOCK_ID.ordinal()) + ", " +
-                    block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH.ordinal()) + ", " + block.getHeader(BLOCK_HEADERS.IS_DISPOSED.ordinal()));
-            block.read(bytes1, 0, blockStorage.blockHeaderSize, bytes1.length);
-            System.out.println("Content: " + Arrays.toString(bytes1) + " = " +  new String(bytes1) + "\n");
+        for(Block block : blocks){
+            block.setHeader(BLOCK_HEADERS.IS_DISPOSED, 1);
         }
     }
 
-    public void deleteRecord(int recordId){
-        throw new NotImplementedException();
-    }
+    public void updateRecord(int recordId, byte bytes[]){
+        List<Block> blocks = findBlocksInRecord(recordId);
 
-    public void updateRecord(int recordId, int bytes[]){
-        throw new NotImplementedException();
+        if(blocks == null)
+            throw new IllegalArgumentException("Illegal recordId");
+
+        int nextId = 0;
+
+        Block current = blocks.get(nextId);
+        Block prev = null;
+
+        int toWrite = bytes.length;
+        int written = 0;
+
+        int toWriteInCurrent;
+
+        while(true){
+            toWriteInCurrent = Math.min(toWrite - written, blockStorage.blockContentSize);
+
+            current.write(bytes, written, blockStorage.blockHeaderSize, toWriteInCurrent);
+
+            current.setHeader(BLOCK_HEADERS.PREV_BLOCK_ID, (prev == null) ? -1 : prev.getId());
+            current.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID, -1);
+            current.setHeader(BLOCK_HEADERS.CONTENT_LENGTH, toWriteInCurrent);
+            current.setHeader(BLOCK_HEADERS.IS_DISPOSED, 0);
+
+            written += toWriteInCurrent;
+
+            if(toWrite > written){
+                prev = current;
+
+                if(blocks.size() > ++nextId){
+                    current = blocks.get(nextId);
+                }else {
+                    current = createBlock();
+                }
+
+                prev.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID, current.getId());
+            }
+            else
+                break;
+
+        }
+
+        for(int i = nextId; i < blocks.size(); i++){
+            blockStorage.findBlock(i).setHeader(BLOCK_HEADERS.IS_DISPOSED, 1);
+        }
+
     }
 
     public List<Block> findBlocksInRecord(int recordId){
-        throw new NotImplementedException();
+        List<Block> blocks = new ArrayList<>();
+
+        Block block;
+        int nextId = recordId;
+
+        do {
+            block = blockStorage.findBlock(nextId);
+            blocks.add(block);
+            nextId = block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID);
+        }while(nextId != -1);
+
+        return (blocks.size() == 0) ? null : blocks;
     }
 
     public byte[] getBytes(){
         return blockStorage.byteSequence.getBytes();
+    }
+
+    public void printBlocks(){
+        Block block;
+        byte bytes[] = new byte[blockStorage.blockContentSize];
+
+        for(int i = 0; i < blockStorage.getNumBlocks(); i++){
+            block = blockStorage.findBlock(i);
+            System.out.println("Block " + i + ": " + block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID) + ", " + block.getHeader(BLOCK_HEADERS.PREV_BLOCK_ID) + ", " +
+                    block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH) + ", " + block.getHeader(BLOCK_HEADERS.IS_DISPOSED));
+            block.read(bytes, 0, blockStorage.blockHeaderSize, bytes.length);
+            if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
+                System.out.println("Content: DISPOSED\n");
+            }
+            else {
+                System.out.println("Content: " + Arrays.toString(bytes) + " = " + new String(bytes) + "\n");
+            }
+        }
     }
 
     private Block createBlock(){
@@ -113,7 +188,8 @@ public class RecordStorage {
 
         for(int i = 0; i < numBlocks; i++){
             block = blockStorage.findBlock(i);
-            if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED.ordinal()) == 1){
+            if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
+                block.clearContent();
                 return block;
             }
         }

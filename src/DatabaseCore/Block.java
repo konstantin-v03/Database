@@ -52,6 +52,16 @@ public class Block {
         blockStorage.byteSequence.write(toWrite, id * blockStorage.blockSize + destOffSet);
     }
 
+    public void clearContent(){
+        byte bytes[] = new byte[blockStorage.blockSize];
+
+        for(int i = 0; i < bytes.length; i++){
+            bytes[i] = 0;
+        }
+
+        blockStorage.byteSequence.write(bytes,id * blockStorage.blockSize);
+    }
+
     public int getId() {
         return id;
     }

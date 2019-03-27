@@ -5,20 +5,40 @@ import Utilities.ByteSequence;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) {
         RecordStorage recordStorage = new RecordStorage(10);
 
-        String str = "Konstantin Volvenkov ";
+        String str = "Konstantin Volvenkov0";
+
+        String str1 = "Ivan Ivanov1";
+
+        String str2 = "Vlad Humanov2";
+
+        String str3 = "Anya Kolanova3";
 
         recordStorage.createRecord(str.getBytes());
 
-        System.out.println(new String(recordStorage.getRecordContent(0)));
+        recordStorage.createRecord(str1.getBytes());
 
-        System.out.println(Arrays.toString(recordStorage.getBytes()));
+        recordStorage.disposeRecord(0);
+
+        recordStorage.disposeRecord(3);
+
+        recordStorage.createRecord(str2.getBytes());
+
+        recordStorage.createRecord(str3.getBytes());
+
+        recordStorage.updateRecord(0, str.getBytes());
+
+        recordStorage.createRecord(str2.getBytes());
+
+
+        System.out.println(new String(recordStorage.getRecordContent(0)));
+        System.out.println(new String(recordStorage.getRecordContent(2)));
+        System.out.println(new String(recordStorage.getRecordContent(5)));
     }
 
     private void testBlockStorage(){
