@@ -31,23 +31,30 @@ public class ByteSequence {
     }
 
     public void extend(int sizeOfExtending){
-        byte extendedSource[] = new byte[source.length + sizeOfExtending];
-
-        int i;
-
-        for(i = 0; i < source.length; i++){
-            extendedSource[i] = source[i];
-        }
-
-        for(; i < extendedSource.length; i++){
-            extendedSource[i] = 0;
-        }
-
-        source = extendedSource;
+        source = extendByteArray(source, sizeOfExtending);
     }
 
     public int length(){
         return source.length;
     }
 
+    public byte[] getBytes(){
+        return source;
+    }
+
+    public static byte[] extendByteArray(byte array[], int sizeOfExtending){
+        byte extendedArray[] = new byte[array.length + sizeOfExtending];
+
+        int i = 0;
+
+        for(; i < array.length; i++){
+            extendedArray[i] = array[i];
+        }
+
+        for(; i < extendedArray.length; i++){
+            extendedArray[i] = 0;
+        }
+
+        return extendedArray;
+    }
 }

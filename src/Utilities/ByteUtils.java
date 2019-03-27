@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 public class ByteUtils {
 
-    public static long bytesToInt(byte bytes[]){
+    public static int bytesToInt(byte bytes[]){
         if(bytes.length != 4)
             throw new IllegalArgumentException("Illegal integer representation");
 

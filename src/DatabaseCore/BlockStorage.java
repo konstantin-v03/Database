@@ -4,6 +4,8 @@ import Utilities.ByteSequence;
 
 public class BlockStorage {
 
+    private int numBlocks;
+
     public final ByteSequence byteSequence;
 
     public final int blockSize;
@@ -20,7 +22,7 @@ public class BlockStorage {
         if(blockHeaderSize >= blockSize)
             throw new IllegalArgumentException("Illegal blockHeaderSize");
 
-        if(blockHeaderFieldSize > blockHeaderSize || blockHeaderFieldSize != 8 || blockHeaderSize % blockHeaderFieldSize != 0)
+        if(blockHeaderFieldSize > blockHeaderSize || blockHeaderFieldSize != 4 || blockHeaderSize % blockHeaderFieldSize != 0)
             throw new IllegalArgumentException("Illegal blockHeaderFieldSize");
 
         this.byteSequence = byteSequence;
@@ -33,7 +35,7 @@ public class BlockStorage {
         numBlockHeaderFields = blockHeaderSize / blockHeaderFieldSize;
     }
 
-    public Block find(int id) {
+    public Block findBlock(int id) {
         if(id * blockSize >= byteSequence.length())
             return null;
         else
@@ -45,6 +47,12 @@ public class BlockStorage {
 
         byteSequence.extend(blockSize);
 
+        numBlocks++;
+
         return new Block(this, id);
+    }
+
+    public int getNumBlocks() {
+        return numBlocks;
     }
 }

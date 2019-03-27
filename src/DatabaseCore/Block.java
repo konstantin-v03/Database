@@ -4,8 +4,6 @@ import static Utilities.ByteUtils.*;
 
 public class Block {
 
-    private boolean isDisposed;
-
     private BlockStorage blockStorage;
 
     private int id;
@@ -15,11 +13,11 @@ public class Block {
         this.id = id;
     }
 
-    public long getHeader(int headerField) {
+    public int getHeader(int headerField) {
         if(headerField >= blockStorage.numBlockHeaderFields)
             throw new IllegalArgumentException("Illegal headerField");
 
-        return bytesToInt(blockStorage.byteSequence.read(id * blockStorage.blockSize + headerField * blockStorage.blockHeaderFieldSize, 8));
+        return bytesToInt(blockStorage.byteSequence.read(id * blockStorage.blockSize + headerField * blockStorage.blockHeaderFieldSize, blockStorage.blockHeaderFieldSize));
     }
 
     public void setHeader(int headerField, int value) {
@@ -45,7 +43,7 @@ public class Block {
         if(srcOffSet + count > src.length || destOffSet + count > blockStorage.blockSize)
             throw new IndexOutOfBoundsException("Out of block's bounds");
 
-        byte toWrite[] = new byte[src.length - srcOffSet];
+        byte toWrite[] = new byte[count];
 
         for(int i = 0, j = srcOffSet; i < toWrite.length; i++, j++) {
             toWrite[i] = src[j];
@@ -54,12 +52,7 @@ public class Block {
         blockStorage.byteSequence.write(toWrite, id * blockStorage.blockSize + destOffSet);
     }
 
-    public boolean isDisposed() {
-        return isDisposed;
+    public int getId() {
+        return id;
     }
-
-    public void dispose() {
-        isDisposed = true;
-    }
-
 }
