@@ -2,7 +2,7 @@ package Utilities;
 
 import java.nio.ByteBuffer;
 
-public class ByteUtils {
+public class ByteHelper {
 
     public static int bytesToInt(byte bytes[]){
         if(bytes.length != 4)
@@ -22,5 +22,4 @@ public class ByteUtils {
 
         return byteBuffer.array();
     }
-
 }

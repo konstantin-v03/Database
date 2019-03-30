@@ -2,9 +2,6 @@ package DatabaseCore;
 
 import Utilities.ByteSequence;
 
-import static Utilities.ByteUtils.bytesToInt;
-import static Utilities.ByteUtils.intToBytes;
-
 public class BlockStorage {
     private int numBlocks;
 
@@ -57,4 +54,5 @@ public class BlockStorage {
     public int getNumBlocks() {
         return numBlocks;
     }
+
 }

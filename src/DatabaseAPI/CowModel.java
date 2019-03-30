@@ -1,6 +1,8 @@
 package DatabaseAPI;
 
-public class CowModel {
+import java.io.Serializable;
+
+public class CowModel implements Serializable {
 
     private int id;
 
@@ -48,4 +50,5 @@ public class CowModel {
     public void setBreed(String breed) {
         this.breed = breed;
     }
+    
 }

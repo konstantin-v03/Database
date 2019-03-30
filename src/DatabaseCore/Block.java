@@ -1,6 +1,6 @@
 package DatabaseCore;
 
-import static Utilities.ByteUtils.*;
+import static Utilities.ByteHelper.*;
 
 public class Block {
 
@@ -32,7 +32,7 @@ public class Block {
             throw new IndexOutOfBoundsException("Out of block's bounds");
 
         byte src[] = blockStorage.byteSequence.read(id * blockStorage.blockSize + srcOffSet, count);
-        
+
         int lastByte = destOffSet + count;
 
         for(int i = destOffSet, j = 0; i < lastByte; i++, j++){
@@ -66,4 +66,5 @@ public class Block {
     public int getId() {
         return id;
     }
+
 }

@@ -57,4 +57,5 @@ public class ByteSequence {
 
         return extendedArray;
     }
+
 }

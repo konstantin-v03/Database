@@ -1,32 +1,17 @@
 package DatabaseAPI;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+public interface CowDatabase {
 
-public class CowDatabase implements ICowDatabase{
+    boolean insert(CowModel cow);
 
-    @Override
-    public void insert(CowModel cow) {
-        throw new NotImplementedException();
-    }
+    boolean delete(CowModel cow);
 
-    @Override
-    public void delete(CowModel cow) {
-        throw new NotImplementedException();
-    }
+    boolean update(int recordId);
 
-    @Override
-    public void update(int id) {
-        throw new NotImplementedException();
-    }
+    CowModel find(int id);
 
-    @Override
-    public CowModel find(int id) {
-        throw new NotImplementedException();
-    }
+    CowModel findBy(int age);
 
-    @Override
-    public CowModel findBy(String breed, int age) {
-        throw new NotImplementedException();
-    }
+    CowModel findBy(String breed);
 
 }

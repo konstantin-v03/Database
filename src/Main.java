@@ -1,11 +1,12 @@
+import DatabaseAPI.CowModel;
 import DatabaseCore.RecordStorage;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
 
 public class Main {
 
     public static void main(String[] args) {
+
         RecordStorage recordStorage = new RecordStorage(20);
 
         String str = "Konstantin Volvenkov0";
@@ -37,6 +38,7 @@ public class Main {
         System.out.println(new String(recordStorage.getRecordContent(d)));
         System.out.println(new String(recordStorage.getRecordContent(e)));
         System.out.println(recordStorage);
+
     }
 
     private static void saveAsFile(byte bytes[]){
@@ -48,5 +50,4 @@ public class Main {
             ex.printStackTrace();
         }
     }
-
 }
