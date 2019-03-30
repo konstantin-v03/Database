@@ -28,8 +28,9 @@ public class RecordStorage {
     public byte[] getRecordContent(int recordId){
         Block block = blockStorage.findBlock(recordId);
 
-        if(block == null)
+        if(block == null) {
             return null;
+        }
 
         if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
             return null;
@@ -55,12 +56,13 @@ public class RecordStorage {
         }
     }
 
-    public void createRecord(byte bytes[]){
+    public int createRecord(byte bytes[]){
         Block current = createBlock();
         Block prev = null;
 
         int toWrite = bytes.length;
         int written = 0;
+        int firstBlockId = current.getId();
 
         int toWriteInCurrent;
 
@@ -84,6 +86,7 @@ public class RecordStorage {
             else
                 break;
         }
+        return firstBlockId;
     }
 
     public void disposeRecord(int recordId){
@@ -144,7 +147,47 @@ public class RecordStorage {
 
     }
 
-    public List<Block> findBlocksInRecord(int recordId){
+    @Override
+    public String toString() {
+        Block block;
+        byte bytes[] = new byte[blockStorage.blockContentSize];
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for(int i = 0; i < blockStorage.getNumBlocks(); i++){
+            block = blockStorage.findBlock(i);
+            stringBuilder.append("----------\n");
+            stringBuilder.append("Block ");
+            stringBuilder.append(i);
+            stringBuilder.append("\nHeaders: \nNEXT_BLOCK_ID: ");
+            stringBuilder.append(block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID));
+            stringBuilder.append("\nPREV_BLOCK_ID: ");
+            stringBuilder.append(block.getHeader(BLOCK_HEADERS.PREV_BLOCK_ID));
+            stringBuilder.append("\nCONTENT_LENGTH: ");
+            stringBuilder.append(block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH));
+            stringBuilder.append("\nIS_DISPOSED: ");
+            stringBuilder.append(block.getHeader(BLOCK_HEADERS.IS_DISPOSED));
+            stringBuilder.append("\n");
+            block.read(bytes, 0, blockStorage.blockHeaderSize, bytes.length);
+
+            if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
+                stringBuilder.append("Content: DISPOSED\n");
+            }
+            else {
+                stringBuilder.append("Content: ");
+                stringBuilder.append(Arrays.toString(bytes));
+                stringBuilder.append(" = ");
+                stringBuilder.append(new String(bytes));
+            }
+
+            stringBuilder.append("\n");
+        }
+        stringBuilder.append("----------\n");
+
+        return stringBuilder.toString();
+    }
+
+    private List<Block> findBlocksInRecord(int recordId){
         List<Block> blocks = new ArrayList<>();
 
         Block block;
@@ -157,28 +200,6 @@ public class RecordStorage {
         }while(nextId != -1);
 
         return (blocks.size() == 0) ? null : blocks;
-    }
-
-    public byte[] getBytes(){
-        return blockStorage.byteSequence.getBytes();
-    }
-
-    public void printBlocks(){
-        Block block;
-        byte bytes[] = new byte[blockStorage.blockContentSize];
-
-        for(int i = 0; i < blockStorage.getNumBlocks(); i++){
-            block = blockStorage.findBlock(i);
-            System.out.println("Block " + i + ": " + block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID) + ", " + block.getHeader(BLOCK_HEADERS.PREV_BLOCK_ID) + ", " +
-                    block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH) + ", " + block.getHeader(BLOCK_HEADERS.IS_DISPOSED));
-            block.read(bytes, 0, blockStorage.blockHeaderSize, bytes.length);
-            if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
-                System.out.println("Content: DISPOSED\n");
-            }
-            else {
-                System.out.println("Content: " + Arrays.toString(bytes) + " = " + new String(bytes) + "\n");
-            }
-        }
     }
 
     private Block createBlock(){

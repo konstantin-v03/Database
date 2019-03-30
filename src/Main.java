@@ -1,7 +1,4 @@
-import DatabaseCore.BlockStorage;
 import DatabaseCore.RecordStorage;
-import Utilities.ByteSequence;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,7 +6,7 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) {
-        RecordStorage recordStorage = new RecordStorage(10);
+        RecordStorage recordStorage = new RecordStorage(20);
 
         String str = "Konstantin Volvenkov0";
 
@@ -19,43 +16,27 @@ public class Main {
 
         String str3 = "Anya Kolanova3";
 
-        recordStorage.createRecord(str.getBytes());
+        int a = recordStorage.createRecord(str.getBytes());
 
-        recordStorage.createRecord(str1.getBytes());
+        int b = recordStorage.createRecord(str1.getBytes());
 
-        recordStorage.disposeRecord(0);
+        recordStorage.disposeRecord(a);
 
-        recordStorage.disposeRecord(3);
+        recordStorage.disposeRecord(b);
 
-        recordStorage.createRecord(str2.getBytes());
+        int c = recordStorage.createRecord(str2.getBytes());
 
-        recordStorage.createRecord(str3.getBytes());
+        int d = recordStorage.createRecord(str3.getBytes());
 
-        recordStorage.updateRecord(0, str.getBytes());
+        recordStorage.updateRecord(c, str.getBytes());
 
-        recordStorage.createRecord(str2.getBytes());
+        int e = recordStorage.createRecord(str2.getBytes());
 
 
-        System.out.println(new String(recordStorage.getRecordContent(0)));
-        System.out.println(new String(recordStorage.getRecordContent(2)));
-        System.out.println(new String(recordStorage.getRecordContent(5)));
-    }
-
-    private void testBlockStorage(){
-        byte source[] = new byte[0];
-
-        BlockStorage blockStorage = new BlockStorage(new ByteSequence(source), 128, 48, 8);
-        blockStorage.createBlock();
-        blockStorage.createBlock();
-
-        String str = "Hello, World!";
-
-        String str1 = "What's up?";
-
-        blockStorage.findBlock(0).write(str.getBytes(), 0, 0, str.length());
-        blockStorage.findBlock(1).write(str1.getBytes(), 0, 0, str1.length());
-
-        saveAsFile(blockStorage.byteSequence.read(0, blockStorage.byteSequence.length()));
+        System.out.println(new String(recordStorage.getRecordContent(c)));
+        System.out.println(new String(recordStorage.getRecordContent(d)));
+        System.out.println(new String(recordStorage.getRecordContent(e)));
+        System.out.println(recordStorage);
     }
 
     private static void saveAsFile(byte bytes[]){
