@@ -9,11 +9,11 @@ import java.util.Queue;
 
 import static Utilities.ByteSequence.extendByteArray;
 
-public class RecordStorage {
+public class RecordStorage{
 
     private static class BLOCK_HEADERS{
         static int NEXT_BLOCK_ID  = 0;
-        static int PREV_BLOCK_ID  = 1;
+        static int IS_FIRST       = 1;
         static int CONTENT_LENGTH = 2;
         static int IS_DISPOSED    = 3;
     }
@@ -21,9 +21,11 @@ public class RecordStorage {
     private BlockStorage blockStorage;
 
     public RecordStorage(int blockContentSize){
-
         blockStorage = new BlockStorage(new ByteSequence(new byte[0]), blockContentSize + 16, 16, 4);
+    }
 
+    public RecordStorage(ByteSequence byteSequence, int blockContentSize){
+        blockStorage = new BlockStorage(byteSequence, blockContentSize + 16, 16, 4);
     }
 
     public byte[] getRecordContent(int recordId){
@@ -33,7 +35,7 @@ public class RecordStorage {
             return null;
         }
 
-        if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
+        if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1 || block.getHeader(BLOCK_HEADERS.IS_FIRST) == 0){
             return null;
         }
 
@@ -44,7 +46,7 @@ public class RecordStorage {
         byte bytes[] = new byte[blockSize];
 
         while(true){
-            block.read(bytes, offSet, blockStorage.blockHeaderSize, blockSize);
+            block.read(bytes, offSet, blockStorage.blockHeadersSize, blockSize);
             nextBlockId = block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID);
 
             if(nextBlockId == -1) return bytes;
@@ -70,9 +72,9 @@ public class RecordStorage {
         while(true){
             toWriteInCurrent = Math.min(toWrite - written, blockStorage.blockContentSize);
 
-            current.write(bytes, written, blockStorage.blockHeaderSize, toWriteInCurrent);
+            current.write(bytes, written, blockStorage.blockHeadersSize, toWriteInCurrent);
 
-            current.setHeader(BLOCK_HEADERS.PREV_BLOCK_ID, (prev == null) ? -1 : prev.getId());
+            current.setHeader(BLOCK_HEADERS.IS_FIRST, (prev == null) ? 1 : 0);
             current.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID, -1);
             current.setHeader(BLOCK_HEADERS.CONTENT_LENGTH, toWriteInCurrent);
             current.setHeader(BLOCK_HEADERS.IS_DISPOSED, 0);
@@ -107,6 +109,11 @@ public class RecordStorage {
         int nextId = 0;
 
         Block current = blocks.get(nextId);
+
+        if(current.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1 || current.getHeader(BLOCK_HEADERS.IS_FIRST) == 0){
+            return;
+        }
+
         Block prev = null;
 
         int toWrite = bytes.length;
@@ -117,9 +124,9 @@ public class RecordStorage {
         while(true){
             toWriteInCurrent = Math.min(toWrite - written, blockStorage.blockContentSize);
 
-            current.write(bytes, written, blockStorage.blockHeaderSize, toWriteInCurrent);
+            current.write(bytes, written, blockStorage.blockHeadersSize, toWriteInCurrent);
 
-            current.setHeader(BLOCK_HEADERS.PREV_BLOCK_ID, (prev == null) ? -1 : prev.getId());
+            current.setHeader(BLOCK_HEADERS.IS_FIRST, (prev == null) ? 1 : 0);
             current.setHeader(BLOCK_HEADERS.NEXT_BLOCK_ID, -1);
             current.setHeader(BLOCK_HEADERS.CONTENT_LENGTH, toWriteInCurrent);
             current.setHeader(BLOCK_HEADERS.IS_DISPOSED, 0);
@@ -148,6 +155,14 @@ public class RecordStorage {
 
     }
 
+    public byte[] getBytes(){
+        return blockStorage.byteSequence.getBytes();
+    }
+
+    public int getNumBlocks(){
+        return blockStorage.getNumBlocks();
+    }
+
     @Override
     public String toString() {
         Block block;
@@ -162,14 +177,14 @@ public class RecordStorage {
             stringBuilder.append(i);
             stringBuilder.append("\nHeaders: \nNEXT_BLOCK_ID: ");
             stringBuilder.append(block.getHeader(BLOCK_HEADERS.NEXT_BLOCK_ID));
-            stringBuilder.append("\nPREV_BLOCK_ID: ");
-            stringBuilder.append(block.getHeader(BLOCK_HEADERS.PREV_BLOCK_ID));
+            stringBuilder.append("\nIS_FIRST: ");
+            stringBuilder.append(block.getHeader(BLOCK_HEADERS.IS_FIRST));
             stringBuilder.append("\nCONTENT_LENGTH: ");
             stringBuilder.append(block.getHeader(BLOCK_HEADERS.CONTENT_LENGTH));
             stringBuilder.append("\nIS_DISPOSED: ");
             stringBuilder.append(block.getHeader(BLOCK_HEADERS.IS_DISPOSED));
             stringBuilder.append("\n");
-            block.read(bytes, 0, blockStorage.blockHeaderSize, bytes.length);
+            block.read(bytes, 0, blockStorage.blockHeadersSize, bytes.length);
 
             if(block.getHeader(BLOCK_HEADERS.IS_DISPOSED) == 1){
                 stringBuilder.append("Content: DISPOSED\n");
@@ -218,6 +233,5 @@ public class RecordStorage {
 
         return blockStorage.createBlock();
     }
-
 }
 

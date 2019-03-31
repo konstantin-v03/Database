@@ -1,12 +1,14 @@
 package DatabaseAPI;
 
-public abstract class Database<T, K> {
+public interface Database<T, K> {
 
-    public abstract boolean insert(T item);
+    boolean insert(T item);
 
-    public abstract T extract(K key);
+    T extract(K key);
 
-    public abstract boolean delete(T item);
+    boolean delete(K key);
 
-    public abstract boolean update(T item, T item1);
+    boolean update(K key, T item1);
+
+    boolean save();
 }

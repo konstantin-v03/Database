@@ -3,35 +3,33 @@ package DatabaseCore;
 import Utilities.ByteSequence;
 
 public class BlockStorage {
-    private int numBlocks;
-
     public final ByteSequence byteSequence;
 
     public final int blockSize;
-    public final int blockHeaderSize;
+    public final int blockHeadersSize;
     public final int blockContentSize;
 
     public final int blockHeaderFieldSize;
     public final int numBlockHeaderFields;
 
-    public BlockStorage(ByteSequence byteSequence, int blockSize, int blockHeaderSize, int blockHeaderFieldSize){
+    public BlockStorage(ByteSequence byteSequence, int blockSize, int blockHeadersSize, int blockHeaderFieldSize){
         if(byteSequence == null)
             throw new IllegalArgumentException("Illegal byteSequence");
 
-        if(blockHeaderSize >= blockSize)
+        if(blockHeadersSize >= blockSize)
             throw new IllegalArgumentException("Illegal blockHeaderSize");
 
-        if(blockHeaderFieldSize > blockHeaderSize || blockHeaderFieldSize != 4 || blockHeaderSize % blockHeaderFieldSize != 0)
+        if(blockHeaderFieldSize > blockHeadersSize || blockHeaderFieldSize != 4 || blockHeadersSize % blockHeaderFieldSize != 0)
             throw new IllegalArgumentException("Illegal blockHeaderFieldSize");
 
         this.byteSequence = byteSequence;
 
         this.blockSize = blockSize;
-        this.blockHeaderSize = blockHeaderSize;
-        this.blockContentSize = blockSize - blockHeaderSize;
+        this.blockHeadersSize = blockHeadersSize;
+        this.blockContentSize = blockSize - blockHeadersSize;
 
         this.blockHeaderFieldSize = blockHeaderFieldSize;
-        numBlockHeaderFields = blockHeaderSize / blockHeaderFieldSize;
+        numBlockHeaderFields = blockHeadersSize / blockHeaderFieldSize;
     }
 
     public Block findBlock(int id) {
@@ -46,13 +44,11 @@ public class BlockStorage {
 
         byteSequence.extend(blockSize);
 
-        numBlocks++;
-
         return new Block(this, id);
     }
 
     public int getNumBlocks() {
-        return numBlocks;
+        return byteSequence.length() / blockSize;
     }
 
 }
