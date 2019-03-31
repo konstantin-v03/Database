@@ -1,8 +1,9 @@
 package DatabaseAPI;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
-public class CowModel implements Serializable {
+public class Cow implements Serializable {
 
     private int id;
 
@@ -12,7 +13,11 @@ public class CowModel implements Serializable {
 
     private String breed;
 
-    public CowModel(int id, int age, byte[] DNA, String breed) {
+    public Cow(){
+
+    }
+
+    public Cow(int id, int age, byte[] DNA, String breed) {
         this.id = id;
         this.age = age;
         this.DNA = DNA;
@@ -50,5 +55,14 @@ public class CowModel implements Serializable {
     public void setBreed(String breed) {
         this.breed = breed;
     }
-    
+
+    @Override
+    public String toString() {
+        return "Cow{" +
+                "id=" + id +
+                ", age=" + age +
+                ", DNA=" + Arrays.toString(DNA) +
+                ", breed='" + breed + '\'' +
+                '}';
+    }
 }

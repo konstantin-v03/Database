@@ -4,11 +4,14 @@ import java.io.*;
 
 public class SerializeHelper {
 
-    public static byte[] serialize(Object Object){
+    public static byte[] serialize(Object object){
+        if(object == null)
+            return null;
+
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         try(ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)){
-            objectOutputStream.writeObject(Object);
+            objectOutputStream.writeObject(object);
             return byteArrayOutputStream.toByteArray();
         }catch (IOException ex){
             return null;
@@ -16,6 +19,9 @@ public class SerializeHelper {
     }
 
     public static Object deserialize(byte bytes[]){
+        if(bytes == null)
+            return null;
+
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
 
         try(ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream)){

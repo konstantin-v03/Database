@@ -1,17 +1,80 @@
 package DatabaseAPI;
 
-public interface CowDatabase {
+import DatabaseCore.RecordStorage;
 
-    boolean insert(CowModel cow);
+import java.util.HashMap;
+import java.util.Map;
 
-    boolean delete(CowModel cow);
+import static Utilities.SerializeHelper.deserialize;
+import static Utilities.SerializeHelper.serialize;
 
-    boolean update(int recordId);
 
-    CowModel find(int id);
+public class CowDatabase extends Database<Cow> {
 
-    CowModel findBy(int age);
+    private RecordStorage recordStorage;
+    private Map<Integer, Integer> byId;
 
-    CowModel findBy(String breed);
+    public CowDatabase(){
+
+        recordStorage = new RecordStorage(48);
+        byId = new HashMap<>();
+
+    }
+
+    @Override
+    public boolean insert(Cow cow) {
+
+        byte bytes[] = serialize(cow);
+
+        if(bytes == null)
+            return false;
+
+        int recordId = recordStorage.createRecord(bytes);
+
+        byId.put(cow.getId(), recordId);
+
+        return true;
+    }
+
+    @Override
+    public boolean delete(Cow cow) {
+
+        Integer recordId = byId.get(cow.getId());
+
+        if(recordId == null)
+            return false;
+
+        recordStorage.disposeRecord(recordId);
+
+        return true;
+    }
+
+    @Override
+    public boolean update(Cow lastCow, Cow newCow) {
+
+        Integer recordId = byId.get(lastCow.getId());
+
+        if(recordId == null)
+            return false;
+
+        byte bytes[] = serialize(newCow);
+
+        if(bytes == null)
+            return false;
+
+        recordStorage.updateRecord(recordId, bytes);
+
+        return true;
+    }
+
+    @Override
+    public Cow find(int cowId) {
+        Integer recordId = byId.get(cowId);
+
+        if(recordId == null)
+            return null;
+
+        return (Cow) deserialize(recordStorage.getRecordContent(recordId));
+    }
 
 }

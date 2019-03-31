@@ -1,53 +1,23 @@
-import DatabaseAPI.CowModel;
-import DatabaseCore.RecordStorage;
-
-import java.io.*;
-
+import DatabaseAPI.Cow;
+import DatabaseAPI.CowDatabase;
 public class Main {
 
     public static void main(String[] args) {
+        Cow cow1 = new Cow(1, 12, null, "Brown");
+        Cow cow2 = new Cow(2, 14, null, "Black");
+        Cow cow3 = new Cow(3, 7, null, "Red");
+        Cow cow4 = new Cow(4, 8, null, "Yellow");
 
-        RecordStorage recordStorage = new RecordStorage(20);
+        CowDatabase cowDatabase = new CowDatabase();
 
-        String str = "Konstantin Volvenkov0";
+        cowDatabase.insert(cow1);
+        cowDatabase.insert(cow2);
+        cowDatabase.insert(cow3);
+        cowDatabase.insert(cow4);
 
-        String str1 = "Ivan Ivanov1";
-
-        String str2 = "Vlad Humanov2";
-
-        String str3 = "Anya Kolanova3";
-
-        int a = recordStorage.createRecord(str.getBytes());
-
-        int b = recordStorage.createRecord(str1.getBytes());
-
-        recordStorage.disposeRecord(a);
-
-        recordStorage.disposeRecord(b);
-
-        int c = recordStorage.createRecord(str2.getBytes());
-
-        int d = recordStorage.createRecord(str3.getBytes());
-
-        recordStorage.updateRecord(c, str.getBytes());
-
-        int e = recordStorage.createRecord(str2.getBytes());
-
-
-        System.out.println(new String(recordStorage.getRecordContent(c)));
-        System.out.println(new String(recordStorage.getRecordContent(d)));
-        System.out.println(new String(recordStorage.getRecordContent(e)));
-        System.out.println(recordStorage);
-
-    }
-
-    private static void saveAsFile(byte bytes[]){
-        try {
-            FileWriter fileWriter = new FileWriter(new File("database.txt"));
-            fileWriter.write(new String(bytes));
-            fileWriter.flush();
-        }catch (IOException ex){
-            ex.printStackTrace();
-        }
+        System.out.println(cowDatabase.find(1));
+        System.out.println(cowDatabase.find(2));
+        System.out.println(cowDatabase.find(3));
+        System.out.println(cowDatabase.find(4));
     }
 }
