@@ -9,21 +9,18 @@ import static Utilities.SerializeHelper.deserialize;
 import static Utilities.SerializeHelper.serialize;
 
 
-public class CowDatabase extends Database<Cow> {
+public class CowDatabase extends Database<Cow, Integer> {
 
     private RecordStorage recordStorage;
     private Map<Integer, Integer> byId;
 
     public CowDatabase(){
-
         recordStorage = new RecordStorage(48);
         byId = new HashMap<>();
-
     }
 
     @Override
     public boolean insert(Cow cow) {
-
         byte bytes[] = serialize(cow);
 
         if(bytes == null)
@@ -37,8 +34,17 @@ public class CowDatabase extends Database<Cow> {
     }
 
     @Override
-    public boolean delete(Cow cow) {
+    public Cow extract(Integer key) {
+        Integer recordId = byId.get(key);
 
+        if(recordId == null)
+            return null;
+
+        return (Cow) deserialize(recordStorage.getRecordContent(recordId));
+    }
+
+    @Override
+    public boolean delete(Cow cow) {
         Integer recordId = byId.get(cow.getId());
 
         if(recordId == null)
@@ -51,7 +57,6 @@ public class CowDatabase extends Database<Cow> {
 
     @Override
     public boolean update(Cow lastCow, Cow newCow) {
-
         Integer recordId = byId.get(lastCow.getId());
 
         if(recordId == null)
@@ -68,13 +73,7 @@ public class CowDatabase extends Database<Cow> {
     }
 
     @Override
-    public Cow find(int cowId) {
-        Integer recordId = byId.get(cowId);
-
-        if(recordId == null)
-            return null;
-
-        return (Cow) deserialize(recordStorage.getRecordContent(recordId));
+    public String toString() {
+        return recordStorage.toString();
     }
-
 }

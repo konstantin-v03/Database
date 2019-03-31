@@ -1,5 +1,6 @@
 import DatabaseAPI.Cow;
 import DatabaseAPI.CowDatabase;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -15,9 +16,11 @@ public class Main {
         cowDatabase.insert(cow3);
         cowDatabase.insert(cow4);
 
-        System.out.println(cowDatabase.find(1));
-        System.out.println(cowDatabase.find(2));
-        System.out.println(cowDatabase.find(3));
-        System.out.println(cowDatabase.find(4));
+        System.out.println(cowDatabase.extract(1));
+        System.out.println(cowDatabase.extract(2));
+        System.out.println(cowDatabase.extract(3));
+        System.out.println(cowDatabase.extract(4));
+
+        System.out.println(cowDatabase);
     }
 }
