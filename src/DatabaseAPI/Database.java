@@ -16,42 +16,27 @@ import static Utilities.SerializeHelper.serialize;
 public abstract class Database<T, K> {
 
     private static final int BLOCK_CONTENT_SIZE = 48;
+
     private RecordStorage recordStorage;
     private Map<K, Integer> map;
 
     private String fileName;
 
-    @SuppressWarnings("unchecked")
-    public Database(String fileName, boolean isReCreate){
+    protected Database(String fileName, boolean isReCreate){
         if(fileName == null)
             throw new IllegalArgumentException("Illegal fileName");
 
         map = new HashMap<>();
         this.fileName = fileName;
 
-        if(isReCreate){
+        if(!isReCreate){
+            if(!initFromFile(fileName))
+                recordStorage = new RecordStorage(BLOCK_CONTENT_SIZE);
+        }else
             recordStorage = new RecordStorage(BLOCK_CONTENT_SIZE);
-            return;
-        }
-
-        try {
-            byte fileContent[] = Files.readAllBytes(new File(fileName).toPath());
-            recordStorage = new RecordStorage(new ByteSequence(fileContent), BLOCK_CONTENT_SIZE);
-
-            byte recordContent[];
-
-            for(int i = 0; i < recordStorage.getNumBlocks(); i++){
-                if((recordContent = recordStorage.getRecordContent(i)) != null){
-                    map.put((getKey((T)deserialize(recordContent))), i);
-                }
-            }
-
-        }catch (IOException ex){
-            recordStorage = new RecordStorage(BLOCK_CONTENT_SIZE);
-        }
     }
 
-    public boolean insert(T item){
+    public final boolean insert(T item){
         byte bytes[] = serialize(item);
 
         if(bytes == null)
@@ -65,7 +50,7 @@ public abstract class Database<T, K> {
     }
 
     @SuppressWarnings("unchecked")
-    public T extract(K key){
+    public final T extract(K key){
         Integer recordId = map.get(key);
 
         if(recordId == null)
@@ -74,7 +59,7 @@ public abstract class Database<T, K> {
         return (T) deserialize(recordStorage.getRecordContent(recordId));
     }
 
-    public boolean delete(K key){
+    public final boolean delete(K key){
         Integer recordId = map.get(key);
 
         if(recordId == null)
@@ -87,7 +72,7 @@ public abstract class Database<T, K> {
         return true;
     }
 
-    public boolean save(){
+    public final boolean save(){
         try(FileOutputStream fileOutputStream = new FileOutputStream(new File(fileName))) {
             fileOutputStream.write(recordStorage.getBytes());
         }catch (IOException ex){
@@ -102,5 +87,26 @@ public abstract class Database<T, K> {
     @Override
     public String toString() {
         return recordStorage.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean initFromFile(String fileName){
+        try {
+            byte fileContent[] = Files.readAllBytes(new File(fileName).toPath());
+            recordStorage = new RecordStorage(new ByteSequence(fileContent), BLOCK_CONTENT_SIZE);
+
+            byte recordContent[];
+
+            for(int i = 0; i < recordStorage.getNumBlocks(); i++){
+                if((recordContent = recordStorage.getRecordContent(i)) != null){
+                    map.put((getKey((T)deserialize(recordContent))), i);
+                }
+            }
+
+        }catch (IOException ex){
+            return false;
+        }
+
+        return true;
     }
 }

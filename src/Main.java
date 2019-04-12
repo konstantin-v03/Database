@@ -16,10 +16,12 @@ public class Main {
         cowDatabase.insert(cow2);
         cowDatabase.insert(cow3);
         cowDatabase.insert(cow4);
+        cowDatabase.insert(cow5);
 
-        cowDatabase.delete(2);
+        cowDatabase.delete(1);
+        cowDatabase.delete(4);
 
-        System.out.println();
+        System.out.println("-----");
 
         System.out.println(cowDatabase.extract(1));
         System.out.println(cowDatabase.extract(2));
@@ -31,7 +33,7 @@ public class Main {
 
         cowDatabase = new CowDatabase("database", false);
 
-        System.out.println();
+        System.out.println("-----");
 
         System.out.println(cowDatabase.extract(1));
         System.out.println(cowDatabase.extract(2));
@@ -39,7 +41,7 @@ public class Main {
         System.out.println(cowDatabase.extract(4));
         System.out.println(cowDatabase.extract(5));
 
-        System.out.println();
+        System.out.println("-----");
 
     }
 }
