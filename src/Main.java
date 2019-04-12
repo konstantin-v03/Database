@@ -8,7 +8,7 @@ public class Main {
         Cow cow2 = new Cow(2, 14, null, "Black");
         Cow cow3 = new Cow(3, 7, null, "Red");
         Cow cow4 = new Cow(4, 8, null, "Yellow");
-        Cow cow5 = new Cow(5, 12, null, "Red");
+        Cow cow5 = new Cow(5, 32, null, "Red");
 
         CowDatabase cowDatabase = new CowDatabase("database", true);
 
@@ -18,14 +18,6 @@ public class Main {
         cowDatabase.insert(cow4);
 
         cowDatabase.delete(2);
-
-        cowDatabase.update(3, cow5);
-
-        cowDatabase.delete(1);
-
-        cowDatabase.insert(cow1);
-        cowDatabase.insert(cow2);
-        cowDatabase.insert(cow3);
 
         System.out.println();
 
@@ -38,6 +30,8 @@ public class Main {
         cowDatabase.save();
 
         cowDatabase = new CowDatabase("database", false);
+
+        System.out.println();
 
         System.out.println(cowDatabase.extract(1));
         System.out.println(cowDatabase.extract(2));

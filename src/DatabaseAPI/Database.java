@@ -1,14 +1,106 @@
 package DatabaseAPI;
 
-public interface Database<T, K> {
+import DatabaseCore.RecordStorage;
+import Utilities.ByteSequence;
 
-    boolean insert(T item);
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
-    T extract(K key);
+import static Utilities.SerializeHelper.deserialize;
+import static Utilities.SerializeHelper.serialize;
 
-    boolean delete(K key);
+public abstract class Database<T, K> {
 
-    boolean update(K key, T item1);
+    private static final int BLOCK_CONTENT_SIZE = 48;
+    private RecordStorage recordStorage;
+    private Map<K, Integer> map;
 
-    boolean save();
+    private String fileName;
+
+    @SuppressWarnings("unchecked")
+    public Database(String fileName, boolean isReCreate){
+        if(fileName == null)
+            throw new IllegalArgumentException("Illegal fileName");
+
+        map = new HashMap<>();
+        this.fileName = fileName;
+
+        if(isReCreate){
+            recordStorage = new RecordStorage(BLOCK_CONTENT_SIZE);
+            return;
+        }
+
+        try {
+            byte fileContent[] = Files.readAllBytes(new File(fileName).toPath());
+            recordStorage = new RecordStorage(new ByteSequence(fileContent), BLOCK_CONTENT_SIZE);
+
+            byte recordContent[];
+
+            for(int i = 0; i < recordStorage.getNumBlocks(); i++){
+                if((recordContent = recordStorage.getRecordContent(i)) != null){
+                    map.put((getKey((T)deserialize(recordContent))), i);
+                }
+            }
+
+        }catch (IOException ex){
+            recordStorage = new RecordStorage(BLOCK_CONTENT_SIZE);
+        }
+    }
+
+    public boolean insert(T item){
+        byte bytes[] = serialize(item);
+
+        if(bytes == null)
+            return false;
+
+        int recordId = recordStorage.createRecord(bytes);
+
+        map.put(getKey(item), recordId);
+
+        return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T extract(K key){
+        Integer recordId = map.get(key);
+
+        if(recordId == null)
+            return null;
+
+        return (T) deserialize(recordStorage.getRecordContent(recordId));
+    }
+
+    public boolean delete(K key){
+        Integer recordId = map.get(key);
+
+        if(recordId == null)
+            return false;
+
+        recordStorage.disposeRecord(recordId);
+
+        map.remove(key);
+
+        return true;
+    }
+
+    public boolean save(){
+        try(FileOutputStream fileOutputStream = new FileOutputStream(new File(fileName))) {
+            fileOutputStream.write(recordStorage.getBytes());
+        }catch (IOException ex){
+            return false;
+        }
+
+        return true;
+    }
+
+    protected abstract K getKey(T item);
+
+    @Override
+    public String toString() {
+        return recordStorage.toString();
+    }
 }
